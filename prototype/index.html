@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="paper">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Чайный клуб — бронь (прототип дизайна)</title>
+<style>
+:root{
+  --r:6px;
+  --font: ui-rounded, "Trebuchet MS", system-ui, sans-serif;
+  --mono: ui-monospace, "Courier New", monospace;
+}
+html[data-theme="paper"]{
+  --bg:#ece3cf; --card:#f6efde; --ink:#221c15; --muted:#7a6c58; --line:#cdbf9f;
+  --accent:#a8342a; --accent-ink:#fff7ea; --ok:#4c7a5f; --busy:#b9ad94;
+}
+html[data-theme="dark"]{
+  --bg:#17120e; --card:#231b15; --ink:#f0e4cc; --muted:#a2937b; --line:#3b2f25;
+  --accent:#d9a441; --accent-ink:#1a130c; --ok:#7fb08f; --busy:#4a3d30;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);min-height:100vh;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;min-height:100vh;display:flex;flex-direction:column;position:relative;padding-bottom:84px}
+header{padding:18px 18px 6px;display:flex;align-items:flex-start;justify-content:space-between}
+.brand small{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.brand h1{font-size:30px;line-height:1.05;margin-top:4px;letter-spacing:-.01em}
+.theme-btn{border:2px solid var(--ink);background:transparent;color:var(--ink);font-family:var(--mono);font-size:11px;padding:6px 8px;border-radius:var(--r);cursor:pointer}
+section{padding:12px 18px}
+.label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between}
+.row{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}
+.row::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;min-width:54px;padding:9px 10px;border:2px solid var(--ink);border-radius:var(--r);background:transparent;color:var(--ink);font:600 14px var(--font);text-align:center;cursor:pointer;box-shadow:3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.chip small{display:block;font:500 10px var(--mono);color:var(--muted);text-transform:uppercase}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);box-shadow:3px 3px 0 var(--accent)}
+.chip[aria-pressed="true"] small{color:var(--bg);opacity:.7}
+.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.chip:disabled{opacity:.35;box-shadow:none;border-style:dashed;cursor:not-allowed}
+.seg{display:flex;border:2px solid var(--ink);border-radius:var(--r);overflow:hidden}
+.seg button{flex:1;padding:11px 0;border:0;border-right:2px solid var(--ink);background:transparent;color:var(--ink);font:600 15px var(--font);cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.stepper{display:flex;align-items:center;gap:14px}
+.stepper button{width:44px;height:44px;border:2px solid var(--ink);border-radius:var(--r);background:transparent;color:var(--ink);font:700 22px var(--mono);cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.stepper button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.stepper output{font:700 28px var(--mono);min-width:34px;text-align:center}
+.stepper span{color:var(--muted);font-size:14px}
+.map-wrap{position:relative;border:2px solid var(--ink);border-radius:var(--r);overflow:hidden;box-shadow:4px 4px 0 var(--ink);background:var(--card)}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;image-rendering:crisp-edges}
+.spot{position:absolute;border:2px dashed transparent;background:transparent;border-radius:3px;cursor:pointer;font:700 10px var(--mono);color:var(--ink);text-transform:uppercase;display:flex;align-items:flex-end;justify-content:center;padding:2px;text-align:center;line-height:1.1}
+.spot span{background:var(--card);border:1.5px solid var(--ink);padding:1px 4px;border-radius:2px}
+.spot.free{border-color:var(--ok);animation:pulse 2s infinite}
+.spot.free:hover,.spot.sel{border-style:solid;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.spot.sel{border-width:3px}
+.spot.busy,.spot.small{cursor:not-allowed;background:color-mix(in srgb,var(--bg) 62%,transparent);border-color:transparent}
+.spot.busy span,.spot.small span{opacity:.8;border-style:dashed;color:var(--muted);border-color:var(--muted)}
+.tag{position:absolute;font:700 9px var(--mono);letter-spacing:.06em;color:var(--ink);pointer-events:none;text-transform:uppercase;transform:translate(-50%,-50%)}
+.spot.event{border-color:var(--muted);border-style:dotted}
+@keyframes pulse{50%{border-color:color-mix(in srgb,var(--ok) 40%,transparent)}}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:12px;border:2px solid var(--ok);border-radius:2px;margin-right:5px;vertical-align:-2px}
+.legend i.b{border-color:var(--muted);border-style:dashed;background:color-mix(in srgb,var(--bg) 62%,transparent)}
+.hint{font-size:13px;color:var(--muted);margin-top:8px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--card);border-top:2px solid var(--ink);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;padding:12px 0 14px;border:0;background:transparent;color:var(--muted);font:600 12px var(--font);cursor:pointer}
+nav button[aria-current="page"]{color:var(--accent)}
+nav button b{display:block;font:700 20px var(--mono);margin-bottom:2px}
+.sheet{position:fixed;left:50%;bottom:0;transform:translate(-50%,105%);width:100%;max-width:430px;background:var(--card);border:2px solid var(--ink);border-bottom:0;border-radius:14px 14px 0 0;padding:18px 18px 26px;transition:transform .25s ease;z-index:10;box-shadow:0 -6px 0 var(--accent)}
+.sheet{visibility:hidden}
+.sheet.open{transform:translate(-50%,0);visibility:visible}
+.sheet h2{font-size:22px;margin-bottom:2px}
+.sheet .meta{color:var(--muted);font-size:14px;margin-bottom:12px}
+.field{width:100%;border:2px solid var(--ink);border-radius:var(--r);background:transparent;color:var(--ink);padding:12px;font:500 16px var(--font);margin-bottom:8px}
+.tg{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:10px}
+.tg i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.cta{width:100%;padding:16px;border:2px solid var(--ink);border-radius:var(--r);background:var(--accent);color:var(--accent-ink);font:800 17px var(--font);cursor:pointer;box-shadow:4px 4px 0 var(--ink)}
+.cta:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.ghost{width:100%;margin-top:10px;padding:12px;border:0;background:transparent;color:var(--muted);font:600 14px var(--font);cursor:pointer}
+.ticket{border:2px solid var(--ink);border-radius:var(--r);background:var(--card);padding:14px;margin-bottom:14px;box-shadow:4px 4px 0 var(--ink);position:relative}
+.ticket h3{font-size:19px}
+.ticket p{color:var(--muted);font-size:14px;margin-top:4px}
+.ticket .stamp{position:absolute;right:12px;top:12px;font:700 11px var(--mono);color:var(--ok);border:2px solid var(--ok);padding:2px 6px;border-radius:3px;transform:rotate(4deg)}
+.ticket button{margin-top:10px;border:2px solid var(--ink);background:transparent;color:var(--ink);padding:7px 12px;border-radius:var(--r);font:600 13px var(--font);cursor:pointer}
+.empty{text-align:center;color:var(--muted);padding:40px 0}
+.toast{position:fixed;top:14px;left:50%;transform:translate(-50%,-80px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:var(--r);font:600 14px var(--font);transition:transform .25s;z-index:20}
+.toast.show{transform:translate(-50%,0)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><small>чайный клуб · прототип</small><h1>Забронировать<br>место</h1></div>
+    <button class="theme-btn" id="themeBtn" aria-label="Сменить тему">ТЕМА</button>
+  </header>
+
+  <main id="viewBook">
+    <section>
+      <div class="label"><span>1 · День</span></div>
+      <div class="row" id="dates"></div>
+    </section>
+
+    <section>
+      <div class="label"><span>2 · Сколько вас</span></div>
+      <div class="stepper">
+        <button id="gMinus" aria-label="Меньше">−</button>
+        <output id="gOut">2</output>
+        <button id="gPlus" aria-label="Больше">+</button>
+        <span id="gHint"></span>
+      </div>
+    </section>
+
+    <section>
+      <div class="label"><span>3 · На сколько</span></div>
+      <div class="seg" id="dur">
+        <button data-h="1" aria-pressed="false">1 час</button>
+        <button data-h="2" aria-pressed="true">2 часа</button>
+        <button data-h="3" aria-pressed="false">3 часа</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="label"><span>4 · Во сколько</span><span id="timeHint"></span></div>
+      <div class="row" id="times"></div>
+    </section>
+
+    <section>
+      <div class="label"><span>5 · Выберите место</span></div>
+      <div class="map-wrap" id="mapWrap">
+        <canvas id="map" width="160" height="124"></canvas>
+      </div>
+      <div class="legend"><span><i></i>свободно</span><span><i class="b"></i>занято / не подходит</span></div>
+      <p class="hint" id="mapHint">Нажмите на свободное место на карте</p>
+    </section>
+  </main>
+
+  <main id="viewMine" hidden>
+    <section>
+      <div class="label"><span>Мои брони</span></div>
+      <div id="mine"></div>
+    </section>
+  </main>
+
+  <nav>
+    <button id="tabBook" aria-current="page"><b>▦</b>Бронь</button>
+    <button id="tabMine"><b>✦</b>Мои брони</button>
+    <button disabled style="opacity:.4"><b>茶</b>Чай · скоро</button>
+  </nav>
+</div>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <h2 id="shTitle"></h2>
+  <p class="meta" id="shMeta"></p>
+  <div class="tg"><i></i><span>Имя из Telegram: <b id="tgName">Рома</b></span></div>
+  <input class="field" id="phone" inputmode="tel" placeholder="Телефон для связи" value="+7 ">
+  <input class="field" id="note" placeholder="Повод или пожелания (необязательно)">
+  <button class="cta" id="confirm">Забронировать</button>
+  <button class="ghost" id="cancelSheet">Отмена</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- Данные заведения (в реальном продукте приходят с сервера) ---------- */
+const OPEN_MIN = 12*60, CLOSE_MIN = 23*60, STEP = 30;
+const SPOTS = [
+  {id:'p1', name:'Полянка 1', cap:4, kind:'поляна', desc:'Отдельная полянка у окна. Сидим на подушках вокруг чабаня.',
+   a:{x:8,y:8,w:40,h:44}, table:{x:19,y:21,w:18,h:13}, seats:[[28,16],[28,38],[14,27],[42,27]]},
+  {id:'p2', name:'Полянка 2', cap:5, kind:'поляна', desc:'Средняя полянка, удобна для небольшой компании.',
+   a:{x:52,y:8,w:42,h:44}, table:{x:62,y:21,w:20,h:13}, seats:[[72,16],[66,38],[78,38],[56,27],[88,27]]},
+  {id:'p3', name:'Большая полянка', cap:8, kind:'поляна', desc:'Самая просторная: до 8 человек. Подходит для дня рождения.',
+   a:{x:98,y:8,w:54,h:44}, table:{x:112,y:22,w:26,h:13}, seats:[[116,16],[125,14],[134,16],[110,28],[142,28],[116,39],[125,41],[134,39]]},
+  {id:'t1', name:'Стол у стены', cap:3, soft:2, kind:'стол', desc:'Столик на двоих. Втроём можно, но теснее.',
+   a:{x:8,y:58,w:30,h:24}, table:{x:14,y:65,w:14,h:8}, seats:[[21,61],[21,77],[32,69]]},
+  {id:'t2', name:'Стол в нише', cap:3, soft:2, kind:'стол', desc:'Тихий столик на двоих за перегородкой.',
+   a:{x:112,y:60,w:30,h:24}, table:{x:119,y:67,w:10,h:8}, seats:[[124,63],[124,79],[116,71]]},
+  {id:'ev', name:'Большой стол', cap:0, kind:'event', desc:'Здесь проходят мероприятия. Афиша появится позже.',
+   a:{x:42,y:60,w:66,h:30}, table:{x:48,y:70,w:54,h:12}, seats:[[54,66],[64,66],[74,66],[44,76],[60,86]]}
+];
+const W=160, H=124;
+const PAL = {
+  paper:{floor:'#dccfae',plank:'#d2c39f',wall:'#3a2e22',mat:'#9fb08a',mat2:'#8fa17b',wood:'#7b4a2a',wood2:'#5e361d',cush:'#a8342a',cushOn:'#e8b64a',pot:'#2d5b4a',bar:'#6b4426',wc:'#b9ad94',door:'#ece3cf'},
+  dark:{floor:'#2b2119',plank:'#251c15',wall:'#0e0a07',mat:'#3b5a45',mat2:'#33503e',wood:'#8a5632',wood2:'#6a3f22',cush:'#d9a441',cushOn:'#f3d27a',pot:'#7fb08f',bar:'#6b4426',wc:'#3c3228',door:'#17120e'}
+};
+
+/* ---------- Состояние ---------- */
+const st = {dateIdx:0, guests:2, dur:2, start:null, spot:null, tab:'book', mine:[]};
+const $ = s=>document.querySelector(s);
+const days = [...Array(7)].map((_,i)=>{const d=new Date(2026,10,1+i);return d});
+const WD=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'], MON=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const fmt = m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+
+/* Детерминированные «занятые» интервалы для демо */
+function busy(spotId, dIdx){
+  let seed = [...spotId].reduce((a,c)=>a+c.charCodeAt(0),0)*31 + dIdx*17;
+  const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff};
+  const out=[]; const n = 1+Math.floor(rnd()*2);
+  for(let i=0;i<n;i++){const s=OPEN_MIN+Math.floor(rnd()*16)*30;const l=(2+Math.floor(rnd()*4))*30;out.push([s,Math.min(s+l,CLOSE_MIN)])}
+  return out;
+}
+const fits = s => s.kind!=='event' && st.guests<=s.cap;
+const isFree = (s,start,dur)=>{
+  const end=start+dur*60;
+  if(start<OPEN_MIN||end>CLOSE_MIN)return false;
+  const mine=st.mine.filter(b=>b.dateIdx===st.dateIdx&&b.spot===s.id);
+  return ![...busy(s.id,st.dateIdx),...mine.map(b=>[b.start,b.end])].some(([a,b])=>start<b&&end>a);
+};
+const anyFree = (start)=>SPOTS.some(s=>fits(s)&&isFree(s,start,st.dur));
+
+/* ---------- Рендер ---------- */
+function renderDates(){
+  $('#dates').innerHTML = days.map((d,i)=>`<button class="chip" aria-pressed="${i===st.dateIdx}" data-i="${i}"><small>${i===0?'Сегодня':i===1?'Завтра':WD[d.getDay()]}</small>${d.getDate()} ${MON[d.getMonth()]}</button>`).join('');
+}
+function renderTimes(){
+  const now = new Date(2026,10,1,0,19); // демо: «сейчас» — раннее утро, всё доступно
+  let html='', first=null, evening=null;
+  for(let m=OPEN_MIN;m+st.dur*60<=CLOSE_MIN;m+=STEP){
+    const ok=anyFree(m);
+    if(ok&&first===null)first=m;
+    if(ok&&m>=17*60&&evening===null)evening=m;
+    html+=`<button class="chip" ${ok?'':'disabled'} aria-pressed="${st.start===m}" data-m="${m}">${fmt(m)}</button>`;
+  }
+  $('#times').innerHTML=html;
+  if(st.start===null&&first!==null){st.start=evening??first}
+  if(st.start!==null&&!anyFree(st.start)){st.start=evening??first}
+  $('#times').querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.m===st.start)));
+  const act=$('#times').querySelector('[aria-pressed="true"]');
+  if(act){const r=$('#times');r.scrollLeft=act.offsetLeft-r.clientWidth/2+act.offsetWidth/2}
+  $('#timeHint').textContent = st.start!==null?`${fmt(st.start)}–${fmt(st.start+st.dur*60)}`:'нет мест';
+}
+function renderSpots(){
+  const wrap=$('#mapWrap'); wrap.querySelectorAll('.spot,.tag').forEach(e=>e.remove());
+  [['БАР',51,103],['WC',111,105],['КУХНЯ',139,105],['ВХОД',139,121]].forEach(([t,lx,ly])=>{
+    const e=document.createElement('div');e.className='tag spot-static';e.textContent=t;
+    e.style.left=(lx/W*100)+'%';e.style.top=(ly/H*100)+'%';wrap.appendChild(e)});
+  SPOTS.forEach(s=>{
+    const b=document.createElement('button');
+    const free = st.start!==null && fits(s) && isFree(s,st.start,st.dur);
+    let cls='spot '+(s.kind==='event'?'event':free?'free':(fits(s)?'busy':'small'));
+    if(st.spot===s.id)cls+=' sel';
+    b.className=cls;
+    b.style.left=(s.a.x/W*100)+'%';b.style.top=(s.a.y/H*100)+'%';
+    b.style.width=(s.a.w/W*100)+'%';b.style.height=(s.a.h/H*100)+'%';
+    const tag = s.kind==='event'?'мероприятия':!fits(s)&&s.kind!=='event'?`до ${s.cap}`:s.name;
+    b.innerHTML=`<span>${tag}</span>`;
+    b.setAttribute('aria-label',`${s.name}, ${free?'свободно':'недоступно'}`);
+    b.onclick=()=>onSpot(s,free);
+    wrap.appendChild(b);
+  });
+  const free=SPOTS.filter(s=>fits(s)&&st.start!==null&&isFree(s,st.start,st.dur)).length;
+  $('#mapHint').textContent = st.start===null?'На этот день подходящего времени нет':`Свободно мест: ${free}. Нажмите на подходящее.`;
+}
+function renderGuestHint(){
+  $('#gOut').textContent=st.guests;
+  $('#gHint').textContent = st.guests>=7?'большая компания':st.guests>=4?'лучше полянка':st.guests===3?'полянка или стол':'можно за стол';
+}
+function drawMap(){
+  const c=$('#map'),x=c.getContext('2d'); const P=PAL[document.documentElement.dataset.theme];
+  const R=(a,b,w,h,col)=>{x.fillStyle=col;x.fillRect(a,b,w,h)};
+  R(0,0,W,H,P.floor);
+  for(let y=0;y<H;y+=4)R(0,y,W,1,P.plank);               // доски пола
+  // полянки — татами
+  SPOTS.filter(s=>s.kind==='поляна').forEach(s=>{
+    R(s.a.x,s.a.y,s.a.w,s.a.h,P.mat);
+    for(let yy=s.a.y;yy<s.a.y+s.a.h;yy+=6)R(s.a.x,yy,s.a.w,1,P.mat2);
+  });
+  // стены
+  R(0,0,W,3,P.wall);R(0,0,3,H-6,P.wall);R(W-3,0,3,56,P.wall);
+  R(49,3,2,50,P.wall);R(95,3,2,50,P.wall);                // перегородки между полянками
+  R(0,53,3,2,P.wall);
+  R(W-3,92,3,26,P.wall);R(0,H-4,W,4,P.wall);
+  R(W-26,H-4,18,4,P.door);                                  // вход
+  // перегородка ниши
+  R(106,58,2,30,P.wall);
+  // бар, WC, кухня
+  R(8,98,86,9,P.bar);R(8,98,86,2,P.wood2);
+  for(let i=0;i<7;i++)R(12+i*12,96,3,3,P.pot);              // стеллаж с чайниками
+  R(100,96,22,18,P.wc);R(100,96,22,1,P.wall);R(100,96,1,18,P.wall);R(121,96,1,18,P.wall);
+  R(126,96,26,18,P.mat2);R(126,96,26,1,P.wall);R(126,96,1,18,P.wall);
+  // столы и места
+  SPOTS.forEach(s=>{
+    const t=s.table;
+    R(t.x+1,t.y+1,t.w,t.h,P.wood2);R(t.x,t.y,t.w,t.h,P.wood);R(t.x+1,t.y+1,t.w-2,1,P.wood2);
+    if(s.kind==='поляна'||s.kind==='стол'){R(t.x+t.w/2-1,t.y+t.h/2-1,3,3,P.pot);}   // чайник
+    s.seats.forEach(([sx,sy],i)=>{
+      const on = st.spot===s.id && i<st.guests;
+      const col = on?P.cushOn:(s.kind==='event'?P.wood2:P.cush);
+      R(sx-2,sy-2,5,5,P.wall);R(sx-1,sy-1,3,3,col);
+    });
+  });
+}
+function renderMine(){
+  const el=$('#mine');
+  if(!st.mine.length){el.innerHTML='<div class="empty">Пока нет броней.<br>Выберите место на вкладке «Бронь».</div>';return}
+  el.innerHTML=st.mine.map((b,i)=>{const sp=SPOTS.find(s=>s.id===b.spot),d=days[b.dateIdx];
+    return `<div class="ticket"><span class="stamp">ПОДТВЕРЖДЕНО</span><h3>${sp.name}</h3>
+    <p>${WD[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]} · ${fmt(b.start)}–${fmt(b.end)}</p>
+    <p>${b.guests} ${b.guests===1?'гость':b.guests<5?'гостя':'гостей'}${b.note?' · '+b.note:''}</p>
+    <button data-i="${i}">Отменить бронь</button></div>`}).join('');
+}
+function refresh(){renderGuestHint();renderTimes();renderSpots();drawMap()}
+
+/* ---------- События ---------- */
+$('#dates').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;st.dateIdx=+b.dataset.i;st.spot=null;renderDates();refresh()};
+$('#times').onclick=e=>{const b=e.target.closest('.chip');if(!b||b.disabled)return;st.start=+b.dataset.m;st.spot=null;renderTimes();renderSpots();drawMap()};
+$('#dur').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.dur=+b.dataset.h;st.spot=null;$('#dur').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));refresh()};
+$('#gMinus').onclick=()=>{st.guests=Math.max(1,st.guests-1);st.spot=null;refresh()};
+$('#gPlus').onclick=()=>{st.guests=Math.min(10,st.guests+1);st.spot=null;refresh()};
+function onSpot(s,free){
+  if(s.kind==='event'){toast('Мероприятия — афиша скоро');return}
+  if(!fits(s)){toast(`${s.name}: до ${s.cap} гостей`);return}
+  if(!free){toast('На это время занято — выберите другое');return}
+  st.spot=s.id;renderSpots();drawMap();
+  const d=days[st.dateIdx];
+  $('#shTitle').textContent=s.name;
+  $('#shMeta').textContent=`${WD[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]} · ${fmt(st.start)}–${fmt(st.start+st.dur*60)} · ${st.guests} чел.` + (s.soft&&st.guests>s.soft?' · будет тесновато':'');
+  $('#sheet').classList.add('open');
+}
+$('#cancelSheet').onclick=()=>{$('#sheet').classList.remove('open');st.spot=null;renderSpots();drawMap()};
+$('#confirm').onclick=()=>{
+  if($('#phone').value.replace(/\D/g,'').length<11){toast('Укажите телефон полностью');return}
+  st.mine.push({dateIdx:st.dateIdx,spot:st.spot,start:st.start,end:st.start+st.dur*60,guests:st.guests,note:$('#note').value.trim()});
+  $('#sheet').classList.remove('open');st.spot=null;$('#note').value='';
+  toast('Готово! Бронь подтверждена');refresh();renderMine();setTab('mine');
+};
+$('#mine').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.mine.splice(+b.dataset.i,1);renderMine();refresh();toast('Бронь отменена')};
+function setTab(t){
+  st.tab=t;$('#viewBook').hidden=t!=='book';$('#viewMine').hidden=t!=='mine';
+  $('#tabBook').toggleAttribute('aria-current',t==='book');$('#tabMine').toggleAttribute('aria-current',t==='mine');
+  if(t==='book')$('#tabBook').setAttribute('aria-current','page');else $('#tabMine').setAttribute('aria-current','page');
+}
+$('#tabBook').onclick=()=>setTab('book');$('#tabMine').onclick=()=>setTab('mine');
+$('#themeBtn').onclick=()=>{const h=document.documentElement;h.dataset.theme=h.dataset.theme==='paper'?'dark':'paper';drawMap()};
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200)}
+
+const q=new URLSearchParams(location.search);
+if(q.get('theme'))document.documentElement.dataset.theme=q.get('theme');
+renderDates();refresh();renderMine();
+</script>
+</body>
+</html>
